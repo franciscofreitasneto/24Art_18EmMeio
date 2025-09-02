@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Existência Híbrida - RA (6 Vídeos - Escala Aumentada)</title>
+    <title>Existência Híbrida - RA (6 Vídeos)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="./libs/aframe.min.js"></script>
     <script src="./libs/mindar-image-aframe.prod.js"></script>
@@ -76,13 +76,11 @@
             this.videos.push(document.querySelector("#vid" + i));
           }
 
-          // Posiciona os vídeos aleatoriamente uma vez no início
           this.videoPlanes.forEach((plane) => {
-            // Ajustando os limites de posição para acomodar vídeos maiores
-            const posX = Math.random() * 2.0 - 1.0; // Variação de -1.0 a 1.0 no eixo X
-            const posY = Math.random() * 2.0 - 1.0; // Variação de -1.0 a 1.0 no eixo Y
-            const posZ = Math.random() * -1.0 - 0.5; // Variação de -0.5 a -1.5 no eixo Z (mais à frente)
-            const rotY = Math.random() * 90 - 45;   // Rotação Y de -45 a 45 graus (um pouco mais variado)
+            const posX = Math.random() * 2.0 - 1.0;
+            const posY = Math.random() * 2.0 - 1.0;
+            const posZ = Math.random() * -1.0 - 0.5;
+            const rotY = Math.random() * 90 - 45;
 
             plane.object3D.position.set(posX, posY, posZ);
             plane.object3D.rotation.set(0, THREE.MathUtils.degToRad(rotY), 0);
@@ -100,7 +98,6 @@
         }
       });
 
-      // Lógica para o botão de iniciar
       document.addEventListener('DOMContentLoaded', () => {
         const sceneEl = document.querySelector("a-scene");
         
@@ -114,6 +111,9 @@
             videos.forEach((video) => {
               video.play();
               video.pause();
+              
+              // MUDANÇA: Define a velocidade de reprodução aqui
+              video.playbackRate = 0.25; // <-- 0.5 para metade da velocidade. Mude para 0.25 para mais lento, 1.0 para normal, etc.
             });
             
             startButtonContainer.style.display = 'none';
