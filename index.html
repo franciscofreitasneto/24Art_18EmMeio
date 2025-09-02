@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Existência Híbrida - RA (6 Vídeos - Escala Aumentada)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="./libs/aframe.min.js"></script>
+    <script src="./libs/mindar-image-aframe.prod.js"></script>
+
+    <style>
+      #start-button-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+      }
+      #start-button {
+        padding: 15px 30px;
+        font-size: 20px;
+        border: 2px solid white;
+        background-color: transparent;
+        color: white;
+        cursor: pointer;
+        border-radius: 10px;
+        font-family: sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="start-button-container">
+      <button id="start-button">Iniciar Experiência</button>
+    </div>
+
+    <a-scene 
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false">
+      
+      <a-assets>
+        <video id="vid1" src="./vid_01.webm" loop="true" muted playsinline webkit-playsinline></video>
+        <video id="vid2" src="./vid_02.webm" loop="true" muted playsinline webkit-playsinline></video>
+        <video id="vid3" src="./vid_03.webm" loop="true" muted playsinline webkit-playsinline></video>
+        <video id="vid4" src="./vid_04.webm" loop="true" muted playsinline webkit-playsinline></video>
+        <video id="vid5" src="./vid_05.webm" loop="true" muted playsinline webkit-playsinline></video>
+        <video id="vid6" src="./vid_06.webm" loop="true" muted playsinline webkit-playsinline></video>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity mindar-image-target="targetIndex: 0" multi-video-controller>
+        <a-plane class="video-plane" material="src: #vid1; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
+        <a-plane class="video-plane" material="src: #vid2; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
+        <a-plane class="video-plane" material="src: #vid3; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
+        <a-plane class="video-plane" material="src: #vid4; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
+        <a-plane class="video-plane" material="src: #vid5; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
+        <a-plane class="video-plane" material="src: #vid6; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
+      </a-entity>
+      
+    </a-scene>
+
+    <script>
+      AFRAME.registerComponent('multi-video-controller', {
+        init: function() {
+          this.marker = this.el;
+          this.videoPlanes = this.el.querySelectorAll(".video-plane");
+          this.videos = [];
+          for (let i = 1; i <= 6; i++) {
+            this.videos.push(document.querySelector("#vid" + i));
+          }
+
+          // Posiciona os vídeos aleatoriamente uma vez no início
+          this.videoPlanes.forEach((plane) => {
+            // Ajustando os limites de posição para acomodar vídeos maiores
+            const posX = Math.random() * 2.0 - 1.0; // Variação de -1.0 a 1.0 no eixo X
+            const posY = Math.random() * 2.0 - 1.0; // Variação de -1.0 a 1.0 no eixo Y
+            const posZ = Math.random() * -1.0 - 0.5; // Variação de -0.5 a -1.5 no eixo Z (mais à frente)
+            const rotY = Math.random() * 90 - 45;   // Rotação Y de -45 a 45 graus (um pouco mais variado)
+
+            plane.object3D.position.set(posX, posY, posZ);
+            plane.object3D.rotation.set(0, THREE.MathUtils.degToRad(rotY), 0);
+          });
+
+          this.marker.addEventListener("targetFound", () => {
+            this.videoPlanes.forEach((plane) => plane.setAttribute('visible', true));
+            this.videos.forEach((video) => video.play());
+          });
+
+          this.marker.addEventListener("targetLost", () => {
+            this.videoPlanes.forEach((plane) => plane.setAttribute('visible', false));
+            this.videos.forEach((video) => video.pause());
+          });
+        }
+      });
+
+      // Lógica para o botão de iniciar
+      document.addEventListener('DOMContentLoaded', () => {
+        const sceneEl = document.querySelector("a-scene");
+        
+        sceneEl.addEventListener('loaded', () => {
+          const startButtonContainer = document.querySelector("#start-button-container");
+          const startButton = document.querySelector("#start-button");
+          const mindarSystem = sceneEl.systems['mindar-image-system'];
+          const videos = document.querySelectorAll("video");
+
+          startButton.addEventListener('click', () => {
+            videos.forEach((video) => {
+              video.play();
+              video.pause();
+            });
+            
+            startButtonContainer.style.display = 'none';
+            mindarSystem.start();
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
