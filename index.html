@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Existência Híbrida - RA (6 Vídeos)</title>
+    <title>Existência Híbrida - RA (Versão Final)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="./libs/aframe.min.js"></script>
     <script src="./libs/mindar-image-aframe.prod.js"></script>
@@ -45,59 +45,61 @@
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        <video id="vid1" src="./vid_01.webm" loop="true" muted playsinline webkit-playsinline></video>
-        <video id="vid2" src="./vid_02.webm" loop="true" muted playsinline webkit-playsinline></video>
-        <video id="vid3" src="./vid_03.webm" loop="true" muted playsinline webkit-playsinline></video>
-        <video id="vid4" src="./vid_10.webm" loop="true" muted playsinline webkit-playsinline></video>
-        <video id="vid5" src="./vid_09.webm" loop="true" muted playsinline webkit-playsinline></video>
-        <video id="vid6" src="./vid_06.webm" loop="true" muted playsinline webkit-playsinline></video>
+        
+
+<video id="vid1" src="./vid01.webm" loop="true" muted playsinline webkit-playsinline></video>
+        <video id="vid2" src="./vid02.webm" loop="true" muted playsinline webkit-playsinline></video>
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 0" multi-video-controller>
-        <a-plane class="video-plane" material="src: #vid1; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
-        <a-plane class="video-plane" material="src: #vid2; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
-        <a-plane class="video-plane" material="src: #vid3; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
-        <a-plane class="video-plane" material="src: #vid4; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
-        <a-plane class="video-plane" material="src: #vid5; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
-        <a-plane class="video-plane" material="src: #vid6; transparent: true; shader: flat; alphaTest: 0.5" height="2.52" width="2.0" visible="false"></a-plane>
+      
+
+<a-entity mindar-image-target="targetIndex: 0" video-manager>
+        
+        
+
+<a-plane 
+          id="video-plane-1"
+          material="src: #vid1; transparent: true; shader: flat; alphaTest: 0.5"
+          position="0 0 0" 
+          height="1.26" 
+          width="1" 
+          rotation="0 0 0">
+        </a-plane>
+        <a-plane 
+          id="video-plane-2"
+          material="src: #vid2; transparent: true; shader: flat; alphaTest: 0.5"
+          position="0 0 0.5" 
+          height="1.26" 
+          width="1" 
+          rotation="0 0 0">
+        </a-plane>
       </a-entity>
       
     </a-scene>
 
     <script>
-      AFRAME.registerComponent('multi-video-controller', {
+      // Componente simplificado para gerenciar apenas o play/pause
+      AFRAME.registerComponent('video-manager', {
         init: function() {
           this.marker = this.el;
-          this.videoPlanes = this.el.querySelectorAll(".video-plane");
-          this.videos = [];
-          for (let i = 1; i <= 6; i++) {
-            this.videos.push(document.querySelector("#vid" + i));
-          }
-
-          this.videoPlanes.forEach((plane) => {
-            const posX = Math.random() * 2.0 - 1.0;
-            const posY = Math.random() * 2.0 - 1.0;
-            const posZ = Math.random() * -1.0 - 0.5;
-            const rotY = Math.random() * 90 - 45;
-
-            plane.object3D.position.set(posX, posY, posZ);
-            plane.object3D.rotation.set(0, THREE.MathUtils.degToRad(rotY), 0);
-          });
+          this.video1 = document.querySelector("#vid1");
+          this.video2 = document.querySelector("#vid2");
 
           this.marker.addEventListener("targetFound", () => {
-            this.videoPlanes.forEach((plane) => plane.setAttribute('visible', true));
-            this.videos.forEach((video) => video.play());
+            this.video1.play();
+            this.video2.play();
           });
 
           this.marker.addEventListener("targetLost", () => {
-            this.videoPlanes.forEach((plane) => plane.setAttribute('visible', false));
-            this.videos.forEach((video) => video.pause());
+            this.video1.pause();
+            this.video2.pause();
           });
         }
       });
 
+      // Lógica para o botão de iniciar
       document.addEventListener('DOMContentLoaded', () => {
         const sceneEl = document.querySelector("a-scene");
         
@@ -111,9 +113,7 @@
             videos.forEach((video) => {
               video.play();
               video.pause();
-              
-              // MUDANÇA: Define a velocidade de reprodução aqui
-              video.playbackRate = 0.25; // <-- 0.5 para metade da velocidade. Mude para 0.25 para mais lento, 1.0 para normal, etc.
+              video.playbackRate = 0.15; // Mantém a velocidade em 50%
             });
             
             startButtonContainer.style.display = 'none';
