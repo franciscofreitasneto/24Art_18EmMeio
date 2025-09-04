@@ -1,102 +1,225 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <title>Hello WebXR!</title>
-
-  <!-- three.js -->
-  <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebXR Câmera com Cubo</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block; /* Garante que não haja margens indesejadas */
+            width: 100%;
+            height: 100%;
+        }
+        #enter-ar-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1000; /* Garante que o botão esteja acima do canvas */
+            display: none; /* Escondido por padrão, aparece quando XR é suportado */
+        }
+        #loading-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 1.5em;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
-<!-- Starting an immersive WebXR session requires user interaction.
-    We start this one with a simple button. -->
-<button onclick="activateXR()">Start Hello WebXR</button>
+    <div id="loading-message">Carregando câmera e WebXR...</div>
+    <button id="enter-ar-button">Iniciar AR</button>
 
+    <script src="libs/webxr-polyfill.js"></script> 
+    <script src="libs/three.core.min.js"></script>
 
-// Create the cube and add it to the demo scene.
-const cube = new THREE.Mesh(new THREE.BoxBufferGeometry(0.2, 0.2, 0.2), materials);
-cube.position.set(1, 1, 1);
-scene.add(cube);
+    <script type="module"> // Usamos type="module" para usar import/export se quisermos modularizar mais tarde
+        // --- Variáveis globais para a cena Three.js ---
+        let scene, camera, renderer, video, videoTexture;
+        let cube;
+        let xrSession = null;
+        let xrReferenceSpace = null;
 
-<script>
-async function activateXR() {
-  // Add a canvas element and initialize a WebGL context that is compatible with WebXR.
-  const canvas = document.createElement("canvas");
-  document.body.appendChild(canvas);
-  const gl = canvas.getContext("webgl", {xrCompatible: true});
+        const enterArButton = document.getElementById('enter-ar-button');
+        const loadingMessage = document.getElementById('loading-message');
 
-  // To be continued in upcoming steps.
-}
+        // --- 1. Inicializa a câmera e a cena Three.js ---
+        async function init() {
+            loadingMessage.textContent = "Solicitando acesso à câmera...";
 
-// Initialize a WebXR session using "immersive-ar".
-const session = await navigator.xr.requestSession("immersive-ar");
-session.updateRenderState({
-  baseLayer: new XRWebGLLayer(session, gl)
-});
+            // 1.1. Configura a câmera de vídeo do usuário
+            video = document.createElement('video');
+            video.autoplay = true;
+            video.playsInline = true;
+            video.muted = true; // Muitas vezes necessário para autoplay em alguns navegadores
 
-// Create a render loop that allows us to draw on the AR view.
-const onXRFrame = (time, frame) => {
-  // Queue up the next draw request.
-  session.requestAnimationFrame(onXRFrame);
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = stream;
+                await video.play(); // Espera o vídeo começar a tocar para garantir que a textura esteja pronta
+            } catch (error) {
+                console.error("Erro ao acessar a câmera:", error);
+                loadingMessage.textContent = "Erro ao acessar a câmera. Verifique as permissões.";
+                return;
+            }
 
-  // Bind the graphics framebuffer to the baseLayer's framebuffer
-  gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer)
+            loadingMessage.textContent = "Iniciando cena 3D...";
 
-  // Retrieve the pose of the device.
-  // XRFrame.getViewerPose can return null while the session attempts to establish tracking.
-  const pose = frame.getViewerPose(referenceSpace);
-  if (pose) {
-    // In mobile AR, we only have one view.
-    const view = pose.views[0];
+            // 1.2. Configura a cena Three.js
+            scene = new THREE.Scene();
 
-    const viewport = session.renderState.baseLayer.getViewport(view);
-    renderer.setSize(viewport.width, viewport.height)
+            // Configura a câmera de renderização (usaremos uma câmera virtual para o XR, mas esta é a inicial)
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5; // Posição inicial da câmera antes do XR
 
-    // Use the view's transform matrix and projection matrix to configure the THREE.camera.
-    camera.matrix.fromArray(view.transform.matrix)
-    camera.projectionMatrix.fromArray(view.projectionMatrix);
-    camera.updateMatrixWorld(true);
+            // Configura o Renderer WebGL
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.body.appendChild(renderer.domElement);
 
-    // Render the scene with THREE.WebGLRenderer.
-    renderer.render(scene, camera)
-  }
-}
-session.requestAnimationFrame(onXRFrame);
+            // Adiciona a textura de vídeo ao fundo da cena
+            videoTexture = new THREE.VideoTexture(video);
+            scene.background = videoTexture;
 
-// A 'local' reference space has a native origin that is located
-// near the viewer's position at the time the session was created.
-const referenceSpace = await session.requestReferenceSpace('local');
+            // 1.3. Cria e adiciona o cubo
+            const geometry = new THREE.BoxGeometry(1, 1, 1); // Cubo de 1x1x1 unidade
+            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 }); // Cubo verde
+            cube = new THREE.Mesh(geometry, material);
+            
+            // Posição inicial do cubo na frente da câmera
+            cube.position.set(0, 0, -3); // 3 unidades na frente da câmera (negativo no eixo Z)
+            scene.add(cube);
 
-// Set up the WebGLRenderer, which handles rendering to the session's base layer.
-const renderer = new THREE.WebGLRenderer({
-  alpha: true,
-  preserveDrawingBuffer: true,
-  canvas: canvas,
-  context: gl
-});
-renderer.autoClear = false;
+            // 1.4. Verifica e configura o WebXR
+            checkXRSupport();
 
-// The API directly updates the camera matrices.
-// Disable matrix auto updates so three.js doesn't attempt
-// to handle the matrices independently.
-const camera = new THREE.PerspectiveCamera();
-camera.matrixAutoUpdate = false;
+            window.addEventListener('resize', onWindowResize, false);
+            animate(); // Inicia o loop de animação mesmo sem AR para mostrar a câmera
+        }
 
-const scene = new THREE.Scene();
+        // --- 2. Verifica suporte a WebXR e configura o botão ---
+        async function checkXRSupport() {
+            if (navigator.xr) {
+                try {
+                    // Verifica se o modo 'inline' ou 'immersive-ar' é suportado
+                    const isARSupported = await navigator.xr.isSessionSupported('immersive-ar');
+                    
+                    if (isARSupported) {
+                        enterArButton.style.display = 'block'; // Mostra o botão
+                        enterArButton.textContent = "Iniciar AR (Cubo na frente)";
+                        enterArButton.addEventListener('click', onEnterAR);
+                        loadingMessage.style.display = 'none'; // Esconde mensagem de carregamento
+                    } else {
+                        loadingMessage.textContent = "Seu navegador/dispositivo não suporta WebXR AR imersivo.";
+                        enterArButton.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error("Erro ao verificar suporte XR:", error);
+                    loadingMessage.textContent = "Erro ao verificar suporte XR.";
+                }
+            } else {
+                loadingMessage.textContent = "WebXR não detectado neste navegador. Tente Chrome/Edge.";
+            }
+        }
 
-// The cube will have a different color on each side.
-const materials = [
-  new THREE.MeshBasicMaterial({color: 0xff0000}),
-  new THREE.MeshBasicMaterial({color: 0x0000ff}),
-  new THREE.MeshBasicMaterial({color: 0x00ff00}),
-  new THREE.MeshBasicMaterial({color: 0xff00ff}),
-  new THREE.MeshBasicMaterial({color: 0x00ffff}),
-  new THREE.MeshBasicMaterial({color: 0xffff00})
-];
+        // --- 3. Função para entrar no modo AR ---
+        async function onEnterAR() {
+            enterArButton.style.display = 'none'; // Esconde o botão após clicar
 
-</script>
+            try {
+                xrSession = await navigator.xr.requestSession('immersive-ar', {
+                    requiredFeatures: ['local-floor', 'viewer'] // Recursos necessários para AR
+                });
+                
+                xrSession.addEventListener('end', onSessionEnded); // Lida com o fim da sessão XR
+                renderer.xr.setReferenceSpaceType('local-floor'); // Define o tipo de espaço
+                renderer.xr.setSession(xrSession); // Conecta a sessão XR ao renderer Three.js
+
+                xrReferenceSpace = await xrSession.requestReferenceSpace('local-floor');
+
+                // Aqui, podemos querer ajustar a posição inicial do cubo para que ele apareça
+                // em um local razoável quando a sessão XR começar.
+                // Por exemplo, na frente do usuário, um pouco mais baixo.
+                cube.position.set(0, -0.5, -1); // 1 metro à frente e 0.5m abaixo do viewer (chão)
+                
+                // Agora o loop de animação será controlado pelo WebXR
+                renderer.setAnimationLoop(renderXR);
+
+            } catch (error) {
+                console.error("Erro ao iniciar sessão AR:", error);
+                alert("Não foi possível iniciar a sessão AR. Verifique se seu dispositivo é compatível e as permissões.");
+                enterArButton.style.display = 'block'; // Mostra o botão novamente em caso de erro
+                renderer.setAnimationLoop(animate); // Volta ao loop de animação normal
+            }
+        }
+
+        // --- 4. Loop de Animação para WebXR ---
+        function renderXR(time, frame) {
+            if (!xrReferenceSpace) return;
+
+            const viewerPose = frame.getViewerPose(xrReferenceSpace);
+
+            if (viewerPose) {
+                // Se a cena já tem background de vídeo, não precisamos de mais nada para o fundo
+                // A posição e orientação da câmera Three.js são atualizadas automaticamente pelo renderer.xr
+
+                // Podemos fazer o cubo girar para mostrar que ele é 3D
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+            }
+
+            renderer.render(scene, camera); // Renderiza a cena com a câmera do XR
+        }
+
+        // --- 5. Loop de Animação Padrão (quando não está em modo AR) ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Gira o cubo mesmo fora do XR
+            cube.rotation.x += 0.005;
+            cube.rotation.y += 0.005;
+
+            renderer.render(scene, camera);
+        }
+
+        // --- 6. Manipulação de Eventos ---
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onSessionEnded() {
+            console.log("Sessão XR terminada.");
+            xrSession = null;
+            enterArButton.style.display = 'block'; // Mostra o botão novamente
+            renderer.setAnimationLoop(animate); // Volta ao loop de animação normal
+        }
+
+        // --- Inicia a aplicação ---
+        init();
+
+    </script>
 </body>
 </html>
