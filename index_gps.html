@@ -1,72 +1,55 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Vídeo em Realidade Aumentada com Autoplay</title>
-    <meta name="description" content="Vídeo que inicia automaticamente ao entrar no modo AR.">
+<head>
+    <title>Vídeo em AR com Verificação de Compatibilidade</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  </head>
-  <body>
+</head>
+<body>
     <a-scene webxr="requiredFeatures: hit-test, local-floor;" renderer="colorManagement: true">
-      
-      <a-assets>
-        <video id="meu-video" src="vid02.webm" autoplay loop muted crossorigin="anonymous" playsinline></video>
+        <a-assets>
+            <video id="meu-video" src="vid02.webm" autoplay loop muted crossorigin="anonymous" playsinline></video>
         </a-assets>
-
-      <a-video 
-        src="#meu-video"
-        width="1.6" 
-        height="0.9" 
-        position="0 0 -1">
-      </a-video>
-
-      <a-sky color="#ECECEC"></a-sky>
-      <a-light type="ambient" color="#FFF"></a-light>
+        <a-video src="#meu-video" width="1.6" height="0.9" position="0 0 -1"></a-video>
+        <a-sky color="#ECECEC"></a-sky>
     </a-scene>
 
-    <div style="position: absolute; bottom: 20px; width: 100%; text-align: center; z-index: 1;">
-        <button id="enter-ar-button" style="padding: 12px 20px; font-size: 18px;">Iniciar AR</button>
+    <div id="ui-container" style="position: absolute; bottom: 20px; width: 100%; text-align: center; z-index: 1;">
+        <button id="enter-ar-button" style="display: none; padding: 12px 20px; font-size: 18px;">Iniciar AR</button>
+        <p id="error-message" style="display: none; color: white; background-color: rgba(0,0,0,0.5); padding: 10px;">Seu dispositivo não suporta AR via web.</p>
     </div>
 
     <script>
-      // Aguarda o conteúdo da página carregar
-      document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         const sceneEl = document.querySelector('a-scene');
         const buttonEl = document.getElementById('enter-ar-button');
-        
-        // Pega a referência direta ao elemento <video> nos assets
+        const errorMessage = document.getElementById('error-message');
         const videoEl = document.querySelector('#meu-video');
 
-        // Adiciona um "ouvinte" para o evento 'enter-vr', que é disparado
-        // quando o modo AR/VR é iniciado com sucesso.
-        sceneEl.addEventListener('enter-vr', () => {
-          // Assim que entrar no modo AR, manda o vídeo tocar.
-          // O método .play() retorna uma Promise.
-          const playPromise = videoEl.play();
-
-          if (playPromise !== undefined) {
-            playPromise.then(_ => {
-              // Autoplay iniciado com sucesso!
-              console.log("Vídeo iniciado automaticamente ao entrar em AR.");
-            }).catch(error => {
-              // Autoplay foi bloqueado.
-              console.error("Não foi possível iniciar o vídeo:", error);
-            });
-          }
-        });
-
-        // Este trecho continua igual, gerenciando a visibilidade do botão
-        if (sceneEl.is('ar-mode')) {
-          buttonEl.style.display = 'none';
+        // VERIFICAÇÃO DE COMPATIBILIDADE
+        if (navigator.xr) {
+            try {
+                const supported = await navigator.xr.isSessionSupported('immersive-ar');
+                if (supported) {
+                    buttonEl.style.display = 'block'; // Mostra o botão se for compatível
+                } else {
+                    errorMessage.style.display = 'block'; // Mostra erro se não for
+                }
+            } catch (e) {
+                errorMessage.style.display = 'block';
+                console.error("Erro ao verificar suporte a AR:", e);
+            }
+        } else {
+            errorMessage.style.display = 'block'; // Mostra erro se nem o 'navigator.xr' existir
         }
 
-        buttonEl.addEventListener('click', () => {
-          if (sceneEl.is('ar-mode')) {
-            sceneEl.exitVR();
-          } else {
-            sceneEl.enterVR();
-          }
+        sceneEl.addEventListener('enter-vr', () => {
+            videoEl.play().catch(e => console.error("Erro ao tocar vídeo:", e));
         });
-      });
+
+        buttonEl.addEventListener('click', () => {
+            sceneEl.enterVR();
+        });
+    });
     </script>
-  </body>
+</body>
 </html>
