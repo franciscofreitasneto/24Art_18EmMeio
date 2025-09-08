@@ -45,21 +45,17 @@
       device-orientation-permission-ui="enabled: false">
       
       <a-assets>
-        
-
-<video id="vid1" src="./vid01.webm" loop="true" muted playsinline webkit-playsinline></video>
-        <video id="vid2" src="./vid02.webm" loop="true" muted playsinline webkit-playsinline></video>
-      </a-assets>
+        <video id="vid1" src="./video_final_com_alfa.webm" loop="true" muted playsinline webkit-playsinline></video>
+        <!-- <video id="vid2" src="./vid02.webm" loop="true" muted playsinline webkit-playsinline></video> -->
+     </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
       
 
-<a-entity mindar-image-target="targetIndex: 0" video-manager>
-        
-        
+    <a-entity mindar-image-target="targetIndex: 0" video-manager>
 
-<a-plane 
+        <a-plane 
           id="video-plane-1"
           material="src: #vid1; transparent: true; shader: flat; alphaTest: 0.5"
           position="0 0 0" 
@@ -67,6 +63,7 @@
           width="1" 
           rotation="0 0 0">
         </a-plane>
+            <!--
         <a-plane 
           id="video-plane-2"
           material="src: #vid2; transparent: true; shader: flat; alphaTest: 0.5"
@@ -75,7 +72,8 @@
           width="1" 
           rotation="0 0 0">
         </a-plane>
-      </a-entity>
+           -->
+     </a-entity>
       
     </a-scene>
 
@@ -85,16 +83,16 @@
         init: function() {
           this.marker = this.el;
           this.video1 = document.querySelector("#vid1");
-          this.video2 = document.querySelector("#vid2");
+          //this.video2 = document.querySelector("#vid2");
 
           this.marker.addEventListener("targetFound", () => {
             this.video1.play();
-            this.video2.play();
+            //this.video2.play();
           });
 
           this.marker.addEventListener("targetLost", () => {
             this.video1.pause();
-            this.video2.pause();
+            //this.video2.pause();
           });
         }
       });
@@ -113,7 +111,7 @@
             videos.forEach((video) => {
               video.play();
               video.pause();
-              video.playbackRate = 0.15; // Mantém a velocidade em 50%
+              video.playbackRate = 0.5; // Mantém a velocidade em 50%
             });
             
             startButtonContainer.style.display = 'none';

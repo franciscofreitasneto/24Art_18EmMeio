@@ -1,0 +1,4 @@
+file 'vid01_00_corrigido.webm'
+file 'vid01_90_corrigido.webm'
+file 'vid01_180_corrigido.webm'
+file 'vid01_270_corrigido.webm'
