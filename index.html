@@ -31,94 +31,118 @@
       }
     </style>
   </head>
-  <body>
+<body>
 
-    <div id="start-button-container">
-      <button id="start-button">Iniciar Experiência</button>
-    </div>
+  <div id="start-button-container">
+    <button id="start-button">Iniciar Experiência</button>
+  </div>
 
-    <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
-      color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
-      vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false">
-      
-      <a-assets>
-        <video id="vid1" src="./video_final_com_alfa.webm" loop="true" muted playsinline webkit-playsinline></video>
-        <!-- <video id="vid2" src="./vid02.webm" loop="true" muted playsinline webkit-playsinline></video> -->
-     </a-assets>
+  <a-scene 
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
+    color-space="sRGB" 
+    renderer="colorManagement: true, physicallyCorrectLights" 
+    vr-mode-ui="enabled: false" 
+    device-orientation-permission-ui="enabled: false">
+    
+    <a-assets>
+      <video id="vid1" src="./AI_Colonia.webm" loop="true" muted playsinline webkit-playsinline></video>
+      <video id="vid2" src="./AI_Folha.webm" loop="true" muted playsinline webkit-playsinline></video>
+      <video id="vid3" src="./AI_Folha.webm" loop="true" muted playsinline webkit-playsinline></video>
+      <!--
+      <video id="vid4" src="./caminho/para/seu/video4.webm" loop="true" muted playsinline webkit-playsinline></video>
+      -->
+    </a-assets>
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      
+    <a-entity mindar-image-target="targetIndex: 0" video-handler>
+      <a-plane 
+        material="src: #vid1; transparent: true; shader: flat; alphaTest: 0.5"
+        position="0 0 0" 
+        height="1.26" 
+        width="1" 
+        rotation="0 0 0">
+      </a-plane>
+    </a-entity>
+    
+    <a-entity mindar-image-target="targetIndex: 1" video-handler>
+      <a-plane 
+        material="src: #vid2; transparent: true; shader: flat; alphaTest: 0.5"
+        position="0 0 0" 
+        height="1.26" 
+        width="1" 
+        rotation="0 0 0">
+      </a-plane>
+    </a-entity>
 
-    <a-entity mindar-image-target="targetIndex: 0" video-manager>
+    <a-entity mindar-image-target="targetIndex: 2" video-handler>
+      <a-plane 
+        material="src: #vid3; transparent: true; shader: flat; alphaTest: 0.5"
+        position="0 0 0" 
+        height="1.26" 
+        width="1" 
+        rotation="0 0 0">
+      </a-plane>
+    </a-entity>
+    <!--
+    <a-entity mindar-image-target="targetIndex: 3" video-handler>
+      <a-plane 
+        material="src: #vid4; transparent: true; shader: flat; alphaTest: 0.5"
+        position="0 0 0" 
+        height="1.26" 
+        width="1" 
+        rotation="0 0 0">
+      </a-plane>
+    </a-entity>
+    -->
+    
+  </a-scene>
 
-        <a-plane 
-          id="video-plane-1"
-          material="src: #vid1; transparent: true; shader: flat; alphaTest: 0.5"
-          position="0 0 0" 
-          height="1.26" 
-          width="1" 
-          rotation="0 0 0">
-        </a-plane>
-            <!--
-        <a-plane 
-          id="video-plane-2"
-          material="src: #vid2; transparent: true; shader: flat; alphaTest: 0.5"
-          position="0 0 0.5" 
-          height="1.26" 
-          width="1" 
-          rotation="0 0 0">
-        </a-plane>
-           -->
-     </a-entity>
-      
-    </a-scene>
 
-    <script>
-      // Componente simplificado para gerenciar apenas o play/pause
-      AFRAME.registerComponent('video-manager', {
-        init: function() {
-          this.marker = this.el;
-          this.video1 = document.querySelector("#vid1");
-          //this.video2 = document.querySelector("#vid2");
+<script>
+  // NOVO COMPONENTE: Mais genérico e reutilizável
+  AFRAME.registerComponent('video-handler', {
+    init: function() {
+      // Pega o elemento de vídeo que está DENTRO desta entidade
+      this.video = this.el.querySelector('a-plane').getObject3D('mesh').material.map.image;
+      this.marker = this.el; // A entidade <a-entity> é o próprio marcador
 
-          this.marker.addEventListener("targetFound", () => {
-            this.video1.play();
-            //this.video2.play();
-          });
-
-          this.marker.addEventListener("targetLost", () => {
-            this.video1.pause();
-            //this.video2.pause();
-          });
-        }
+      this.marker.addEventListener("targetFound", () => {
+        console.log("Marcador encontrado, tocando vídeo:", this.video.id);
+        this.video.play();
       });
 
-      // Lógica para o botão de iniciar
-      document.addEventListener('DOMContentLoaded', () => {
-        const sceneEl = document.querySelector("a-scene");
-        
-        sceneEl.addEventListener('loaded', () => {
-          const startButtonContainer = document.querySelector("#start-button-container");
-          const startButton = document.querySelector("#start-button");
-          const mindarSystem = sceneEl.systems['mindar-image-system'];
-          const videos = document.querySelectorAll("video");
+      this.marker.addEventListener("targetLost", () => {
+        console.log("Marcador perdido, pausando vídeo:", this.video.id);
+        this.video.pause();
+        this.video.currentTime = 0; // Opcional: reseta o vídeo para o início
+      });
+    }
+  });
 
-          startButton.addEventListener('click', () => {
-            videos.forEach((video) => {
-              video.play();
-              video.pause();
-              video.playbackRate = 0.5; // Mantém a velocidade em 50%
-            });
-            
-            startButtonContainer.style.display = 'none';
-            mindarSystem.start();
-          });
+  // Lógica para o botão de iniciar (ajustada para os 4 vídeos)
+  document.addEventListener('DOMContentLoaded', () => {
+    const sceneEl = document.querySelector("a-scene");
+    
+    sceneEl.addEventListener('loaded', () => {
+      const startButtonContainer = document.querySelector("#start-button-container");
+      const startButton = document.querySelector("#start-button");
+      const mindarSystem = sceneEl.systems['mindar-image-system'];
+      const videos = document.querySelectorAll("video");
+
+      startButton.addEventListener('click', () => {
+        // Truque para permitir o autoplay em navegadores mobile
+        videos.forEach((video) => {
+          video.play();
+          video.pause();
+          video.playbackRate = 0.5; // Mantém sua configuração de velocidade
         });
+        
+        startButtonContainer.style.display = 'none';
+        mindarSystem.start();
       });
-    </script>
+    });
+  });
+</script>
   </body>
 </html>
