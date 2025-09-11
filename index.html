@@ -38,7 +38,7 @@
   </div>
 
   <a-scene 
-    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; maxTrack: 3"
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; maxTrack: 10"
     color-space="sRGB" 
     renderer="colorManagement: true, physicallyCorrectLights" 
     vr-mode-ui="enabled: false" 
@@ -47,10 +47,9 @@
     <a-assets>
       <video id="vid1" src="./AI_Colonia.webm" loop="true" muted playsinline webkit-playsinline></video>
       <video id="vid2" src="./AI_Coxa_alpha.webm" loop="true" muted playsinline webkit-playsinline></video>
-      <video id="vid3" src="./AI_Folha.webm" loop="true" muted playsinline webkit-playsinline></video>
-      <!--
-      <video id="vid4" src="./caminho/para/seu/video4.webm" loop="true" muted playsinline webkit-playsinline></video>
-      -->
+      <video id="vid3" src="./AI_Folha.webm" loop="true" muted playsinline webkit-playsinline></video>  
+      <video id="vid4" src="./AI_traco.webm" loop="true" muted playsinline webkit-playsinline></video>
+      <video id="vid5" src="./AI_Colonia.webm" loop="true" muted playsinline webkit-playsinline></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -84,7 +83,6 @@
         rotation="0 0 0">
       </a-plane>
     </a-entity>
-    <!--
     <a-entity mindar-image-target="targetIndex: 3" video-handler>
       <a-plane 
         material="src: #vid4; transparent: true; shader: flat; alphaTest: 0.5"
@@ -94,8 +92,15 @@
         rotation="0 0 0">
       </a-plane>
     </a-entity>
-    -->
-    
+    <a-entity mindar-image-target="targetIndex: 4" video-handler>
+      <a-plane 
+        material="src: #vid5; transparent: true; shader: flat; alphaTest: 0.5"
+        position="0 0 0" 
+        height="1.26" 
+        width="1" 
+        rotation="0 0 0">
+      </a-plane>
+    </a-entity>  
   </a-scene>
 
 
