@@ -18,6 +18,8 @@
         justify-content: center;
         align-items: center;
         z-index: 10000;
+        flex-direction: column;
+        display: flex;
       }
       #start-button {
         padding: 15px 30px;
@@ -34,6 +36,7 @@
 <body>
 
   <div id="start-button-container">
+    <img src="logo.jpeg" />
     <button id="start-button">Iniciar Experiência</button>
   </div>
 
@@ -87,8 +90,8 @@
       <a-plane 
         material="src: #vid4; transparent: true; shader: flat; alphaTest: 0.5"
         position="0 0 0" 
-        height="1.26" 
-        width="1" 
+        height="2.52" 
+        width="2" 
         rotation="0 0 0">
       </a-plane>
     </a-entity>
